@@ -68,11 +68,13 @@ public class CreateInstanceEventHandler extends AbstractInstanceEventHandler {
       instanceAsJson.put("id", UUID.randomUUID().toString());
       instanceAsJson.put(SOURCE_KEY, MARC_FORMAT);
       instanceAsJson.remove(HRID_KEY);
+      LOGGER.error("In Handle this JSON-Instance: %s", instanceAsJson);
 
       InstanceCollection instanceCollection = storage.getInstanceCollection(context);
       List<String> errors = EventHandlingUtil.validateJsonByRequiredFields(instanceAsJson, requiredFields);
       if (errors.isEmpty()) {
         Instance mappedInstance = InstanceUtil.jsonToInstance(instanceAsJson);
+        LOGGER.error("Before addInstance: %s", mappedInstance.getInstanceTypeId());
         addInstance(mappedInstance, instanceCollection)
           .compose(createdInstance -> createPrecedingSucceedingTitles(mappedInstance, precedingSucceedingTitlesRepository).map(createdInstance))
           .setHandler(ar -> {
@@ -118,6 +120,7 @@ public class CreateInstanceEventHandler extends AbstractInstanceEventHandler {
 
   private Future<Instance> addInstance(Instance instance, InstanceCollection instanceCollection) {
     Future<Instance> future = Future.future();
+    LOGGER.error("In addInstance method we have this instanceType: %s", instance.getInstanceTypeId());
     instanceCollection.add(instance, success -> future.complete(success.getResult()),
       failure -> {
         LOGGER.error("Error posting Instance cause %s, status code %s", failure.getReason(), failure.getStatusCode());
